@@ -9,6 +9,8 @@ class App extends Component {
 
     this.handleNewTodoInput = this.handleNewTodoInput.bind(this);
     this.deleteTodo = this.deleteTodo.bind(this);
+    this.enableEditMode = this.enableEditMode.bind(this);
+    this.updateCurrentTodo = this.updateCurrentTodo.bind(this);
   }
 
   componentDidMount() {
@@ -39,6 +41,20 @@ class App extends Component {
       let todos = this.state.todos;
       let newTodoId = response.data.name;
       todos[newTodoId] = newTodo;
+      this.setState({ todos: todos });
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  deleteTodo(todoId) {
+    axios({
+      url: `/todos/${todoId}.json`,
+      baseURL: 'https://todo-1bd61.firebaseio.com/',
+      method: "DELETE"
+    }).then((response) => {
+      let todos = this.state.todos;
+      delete todos[todoId];
       this.setState({ todos: todos });
     }).catch((error) => {
       console.log(error);
@@ -90,9 +106,31 @@ class App extends Component {
     );
   }
 
-  selectTodo(todoId){
-    this.setState({currentTodo: todoId})
-    console.log(this.state.currentTodo);
+  selectTodo(todoId) {
+    this.setState({ currentTodo: todoId });
+  }
+
+  enableEditMode() {
+    this.setState({ edit: true });
+  }
+
+  updateCurrentTodo() {
+    let id = this.state.currentTodo;
+    let currentTodo = this.state.todos[id];
+    currentTodo.title = this.refs.editTodoInput.value;
+
+    axios({
+      url: `/todos/${id}.json`,
+      baseURL: 'https://todo-1bd61.firebaseio.com/',
+      method: "PATCH",
+      data: currentTodo
+    }).then((response) => {
+      let todos = this.state.todos;
+      todos[id] = currentTodo;
+      this.setState({ todos: todos, edit: false });
+    }).catch((error) => {
+      console.log(error);
+    });
   }
 
   renderSelectedTodo() {
@@ -100,23 +138,29 @@ class App extends Component {
 
     if (this.state.currentTodo) {
       let currentTodo = this.state.todos[this.state.currentTodo];
-      content =  (
-        <div>
-          <h1>{currentTodo.title}</h1>
-        </div>
-      );
+      if(!this.state.edit) {
+        content =  (
+          <div>
+            <div className="d-flex justify-content-end mb-3">
+              <button onClick={this.enableEditMode}>Edit</button>
+            </div>
+            <h1>{currentTodo.title}</h1>
+          </div>
+        );
+      } else {
+        content =  (
+          <div>
+            <div className="d-flex justify-content-end mb-3">
+              <button onClick={this.updateCurrentTodo}>Save</button>
+            </div>
+            <input className="w-100" defaultValue={currentTodo.title} ref="editTodoInput" />
+          </div>
+        );
+      }
     }
 
     return content;
   }
-
-deleteTodo(todoId){
-  axios.delete(`https://todo-1bd61.firebaseio.com/todos/${todoId}.json`)
-  .then((response) =>{
-    const newState = delete this.state.todos[todoId]
-    this.setState({newState})
-  })
-}
 
   render() {
     return (
@@ -135,5 +179,6 @@ deleteTodo(todoId){
   }
 }
 
-
 export default App;
+
+//https://todo-1bd61.firebaseio.com/
