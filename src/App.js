@@ -69,7 +69,7 @@ class App extends Component {
 
       todoElements.push(
         <div className="todo d-flex justify-content-between pb-4" key={todoId}>
-          <div className="mt-2">
+          <div className="mt-2" onClick={ () => this.selectTodo(todoId) }>
             <h4>{todo.title}</h4>
             <div>{moment(todo.createdAt).calendar()}</div>
           </div>
@@ -90,6 +90,26 @@ class App extends Component {
     );
   }
 
+  selectTodo(todoId){
+    this.setState({currentTodo: todoId})
+    console.log(this.state.currentTodo);
+  }
+
+  renderSelectedTodo() {
+    let content;
+
+    if (this.state.currentTodo) {
+      let currentTodo = this.state.todos[this.state.currentTodo];
+      content =  (
+        <div>
+          <h1>{currentTodo.title}</h1>
+        </div>
+      );
+    }
+
+    return content;
+  }
+
 deleteTodo(todoId){
   axios.delete(`https://todo-1bd61.firebaseio.com/todos/${todoId}.json`)
   .then((response) =>{
@@ -106,10 +126,14 @@ deleteTodo(todoId){
             {this.renderNewTodoBox()}
             {this.renderTodoList()}
           </div>
+          <div className="col-6 px-4">
+            {this.renderSelectedTodo()}
+          </div>
         </div>
       </div>
     );
   }
 }
+
 
 export default App;
